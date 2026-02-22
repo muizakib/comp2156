@@ -1,21 +1,45 @@
-name: CI
+name: Deploy React App COMP2156 DevOps Project CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
+      - dep-inclusions
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Print working directory
-        run: pwd
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18.x"
 
-      - name: List files
-        run: ls -la
+      - name: Cache Node modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: node_modules
 
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build app
+        run: npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          publish_branch: gh-pages
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
